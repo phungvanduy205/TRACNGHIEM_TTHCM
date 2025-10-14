@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đề thi Tư tưởng Hồ Chí Minh - Từng câu một</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2.2em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .quiz-content { padding: 30px; }
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 10px;
+            width: 0%;
+            background-color: #764ba2;
+            border-radius: 10px;
+            transition: width 0.4s ease;
+        }
+        #quiz-area { min-height: 400px; }
+        .question { padding: 10px 0; }
+        .question-header { display: flex; align-items: center; margin-bottom: 20px; gap: 15px; }
+        .question-number { background: linear-gradient(135deg, #667eea, #764ba2); color: white; min-width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .question-type { color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9em; font-weight: 500; }
+        .question-text { font-size: 1.2em; line-height: 1.6; margin-bottom: 25px; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; }
+
+        /* Option Styles */
+        .options-container, .categories-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .option, .checkbox-option { background: white; border: 2px solid #ddd; border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s ease; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; }
+        .option:hover, .checkbox-option:hover { border-color: #667eea; background: #f0f2ff; transform: translateY(-2px); }
+        .option.selected, .checkbox-option.selected { border-color: #667eea; background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .checkbox-option { display: flex; align-items: center; }
+        .checkbox-option.selected .checkbox { border-color: white; background: white; }
+        .checkbox-option.selected .checkbox::after { content: '✓'; color: #667eea; font-weight: bold; }
+        .checkbox { width: 20px; height: 20px; border: 2px solid #aaa; border-radius: 4px; margin-right: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        
+        /* Drag & Drop Styles */
+        .categorization .question-type { background: #e84393; }
+        .matching .question-type { background: #e17055; }
+        .drag-blank .question-type { background: #20bf6b; }
+        .category { background: #fdf6f9; border-radius: 10px; padding: 20px; }
+        .category-title { font-weight: bold; color: #e84393; margin-bottom: 15px; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; }
+        .drop-zone { min-height: 80px; border: 2px dashed #e9d5e0; border-radius: 8px; padding: 10px; background: white; transition: all 0.3s ease; }
+        .drop-zone.drag-over { border-color: #e84393; background: #fff0f6; }
+        .draggable-items-source, .drop-zone { display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; margin-top: 15px; padding: 10px; border: 1px solid #f0f0f0; border-radius: 10px; }
+        .draggable-item { background: #fff; border: 2px solid; padding: 10px 15px; border-radius: 20px; cursor: grab; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; }
+        .categorization .draggable-item { border-color: #e84393; color: #e84393; }
+        .matching .draggable-item { border-color: #e17055; color: #e17055; }
+        .draggable-item.dragging { opacity: 0.5; }
+        
+        /* Touch mode styles */
+        .draggable-item.touch-mode { cursor: pointer; }
+        .draggable-item.touch-mode:hover { transform: scale(1.05); }
+        .draggable-item.touch-mode.selected { 
+            transform: scale(1.1); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10;
+            position: relative;
+        }
+        .drop-zone.touch-mode { cursor: pointer; }
+        .drop-zone.touch-mode:hover { border-color: #667eea; background: #f0f2ff; }
+        .drop-zone.touch-mode.selected { border-color: #667eea; background: #e8f0ff; }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .draggable-item { padding: 12px 16px; font-size: 0.95em; }
+            .drop-zone { min-height: 60px; padding: 8px; }
+            .matching-premise { flex-direction: column; gap: 10px; }
+            .matching-drop-zone { width: 100%; }
+        }
+        
+        /* Matching Layout */
+        .matching-premise { display: flex; align-items: center; gap: 15px; background: #fff9f5; padding: 15px; border-radius: 10px; margin-bottom: 10px; }
+        .matching-premise-text { flex-grow: 1; font-weight: 500; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; }
+        .matching-drop-zone { min-height: 50px; width: 300px; flex-shrink: 0; }
+        /* Drag-blank */
+        .blank-drop-zone { display: inline-flex; min-width: 160px; min-height: 38px; border: 2px dashed #c8f5dc; border-radius: 8px; padding: 4px 8px; vertical-align: middle; background: #f8fffb; margin: 0 6px; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; }
+        .drag-blank .draggable-item { border-color: #20bf6b; color: #20bf6b; }
+        .token { background: #20bf6b; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.9em; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; }
+        
+        /* Navigation */
+        .quiz-navigation { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; }
+        .nav-btn, .submit-btn-final { background: #fff; color: #764ba2; border: 2px solid #764ba2; padding: 10px 30px; font-size: 1em; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; }
+        .nav-btn:hover, .submit-btn-final:hover { background: #764ba2; color: white; transform: translateY(-2px); }
+        .nav-btn:disabled { background: #e0e0e0; border-color: #e0e0e0; color: #aaa; cursor: not-allowed; }
+        .progress-text { font-size: 1.1em; font-weight: 500; color: #555; }
+        
+        /* Results */
+        .results { text-align: center; padding: 40px; }
+        .score { font-size: 2.5em; font-weight: bold; color: #28a745; }
+        .results p { font-size: 1.2em; margin: 15px 0; }
+        /* Lock/feedback */
+        .feedback { margin-top: 15px; font-weight: 600; }
+        .feedback.ok { color: #28a745; }
+        .feedback.err { color: #dc3545; }
+        .nav-btn[disabled] { opacity: 0.6; }
+
+        /* Overview */
+        .overview-container { margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; }
+        .overview-title { font-weight: 600; color: #555; margin-bottom: 10px; }
+        .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); gap: 8px; }
+        .overview-item { height: 44px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 600; cursor: pointer; border: 2px solid transparent; user-select: none; }
+        .overview-item.empty { background: #f2f2f2; color: #888; border-color: #e5e5e5; }
+        .overview-item.answered { background: #e8f0ff; color: #2952cc; border-color: #b3c6ff; }
+        .overview-item.correct { background: #e9f7ef; color: #1e7e34; border-color: #28a745; }
+        .overview-item.incorrect { background: #fdecea; color: #c0392b; border-color: #e74c3c; }
+        .overview-item.active { box-shadow: 0 0 0 3px rgba(118,75,162,0.2); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Đề thi Tư tưởng Hồ Chí Minh</h1>
+        </div>
+        
+        <div class="quiz-content">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div id="quiz-area">
+                </div>
+            <div class="quiz-navigation">
+                <button class="nav-btn" id="prevBtn">Câu trước</button>
+                <span class="progress-text" id="progressText"></span>
+                <button class="nav-btn" id="lockBtn">Chốt đáp án</button>
+                <button class="nav-btn" id="nextBtn">Câu sau</button>
+            </div>
+            <div class="overview-container" id="overviewContainer">
+                <div class="overview-title">Tổng quan câu hỏi</div>
+                <div class="overview-grid" id="overviewGrid"></div>
+            </div>
+             <div class="results" id="results" style="display: none;">
+                <div class="score" id="score"></div>
+                <p>Bạn đã hoàn thành bài thi!</p>
+                <button class="nav-btn" onclick="location.reload()">Làm lại từ đầu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const questionsData = [
+            { questionNumber: 1, questionType: "fill-in-the-blank", questionText: "\"Chỉ có giải cấp ___ là dễ dùng cảm nhất, cách mạng nhất luôn gan góc đường đầu với bọn để chống thực dân.\"", options: ["Trí thức", "Nông dân", "Tư sản", "Công nhân"], correctAnswer: "Công nhân" },
+            { questionNumber: 2, questionType: "categorization", questionText: "Kéo thả đáp án đúng vào các cột sau:", options: ["Thống nhất tính đẳng và tính khoa học", "Quan điểm kế thừa và phát triển", "Quan điểm toàn diện và hệ thống", "Phương pháp logic, phương pháp lịch sử", "Phương pháp phân tích văn bản kết hợp với nghiên cứu hoạt động thực tiễn của Hồ Chí Minh", "Phương pháp chuyên ngành, liên ngành"], correctAnswer: { "1-Nguyên tắc và quan điểm phương pháp luận trong nghiên cứu tư tưởng Hồ Chí Minh": ["Thống nhất tính đẳng và tính khoa học", "Quan điểm kế thừa và phát triển", "Quan điểm toàn diện và hệ thống"], "2-Phương pháp cụ thể nghiên cứu tư tưởng Hồ Chí Minh": ["Phương pháp logic, phương pháp lịch sử", "Phương pháp phân tích văn bản kết hợp với nghiên cứu hoạt động thực tiễn của Hồ Chí Minh", "Phương pháp chuyên ngành, liên ngành"] }},
+            { questionNumber: 3, questionType: "fill-in-the-blank", questionText: "\"Việc học tập tư tưởng Hồ Chí Minh giúp chúng ta_____,biết sống ở đời và làm người hợp đạo lý\"", options: ["Nâng cao trình độ văn hóa", "Phát triển tư duy", "Rèn luyện đạo đức"], correctAnswer: "Rèn luyện đạo đức" },
+            { questionNumber: 4, questionType: "fill-in-the-blank", questionText: "\"Tư tưởng Hồ Chí Minh là một hệ thống quan điểm toàn diện và sâu sắc về những vấn đề cơ bản của cách mạng Việt Nam, kết quả của sự vận dụng và phát triển sáng tạo_____vào điều kiện cụ thể của nước ta...\"", options: ["Tinh hoa văn hóa phân loại", "Triết học Mác", "Chủ nghĩa Mác – Lênin", "Chủ nghĩa dân tộc"], correctAnswer: "Chủ nghĩa Mác – Lênin" },
+            { questionNumber: 5, questionType: "select-multiple", questionText: "Chọn 3 đáp án đúng trong những nội dung sau:", options: ["A. Cách mang tư tưởng Anh đã đánh đổ giới tụ tập và giai cấp địa chủ phong kiến", "B. Cách mạng Tháng Mười Nga đạp đổ chế độ phong kiến ở nước ta", "C. Cách mang Tháng Mười Nga đem ra một thời đại mới trong lịch sử loài người - thời đại của giai cấp công nhân và nhân dân", "D. Cách mang Tháng Mười Nga đã đánh đổ giai cấp tư bản và cai trị của giai cấp công nhân"], correctAnswer: ["A", "C", "D"] },
+            { questionNumber: 6, questionType: "select-multiple", questionText: "Chọn 2 đáp án đúng về nội hàm cơ bản của tư tưởng Hồ Chí Minh", options: ["A. Hệ thống quan điểm toàn diện và sâu sắc về những vấn đề cơ bản của cách mạng Việt Nam.", "B. Tổng hợp của các hệ tư tưởng trên thế giới", "C. Phản ánh thế giới hiện thực khách quan", "D. Phản ánh những vấn đề có tính quy luật của cách mạng Việt Nam"], correctAnswer: ["A", "D"] },
+            { questionNumber: 7, questionType: "fill-in-the-blank", questionText: "\"Lý luận như ___, nó chỉ phương hướng cho chúng ta trong công việc thực tế. Không có lý luận thì ___ như nhầm mắt mà đi.\"", options: ["Ánh sáng soi đường – đen tối", "La bàn – lúng túng", "Mặt trời – mò mẫm", "Cái kim chỉ nam – lúng túng"], correctAnswer: "Cái kim chỉ nam – lúng túng" },
+            { questionNumber: 8, questionType: "categorization", questionText: "Kéo thả đáp án đúng khớp với các nội dung về ưu điểm văn hóa phương Đông ở vế trái dưới đây:", options: ["Tình yêu quê hương con người", "Tư tưởng vị tha, từ bi, bác ái, tư tưởng cứu khổ, cứu nạn", "Triết lý hành động, tư tưởng nhập thế, triết lý hành đạo, giúp đời", "Thuyết vô vị"], correctAnswer: { "1. Ưu điểm của học thuyết Nho giáo": ["Triết lý hành động, tư tưởng nhập thế, triết lý hành đạo, giúp đời"], "2. Ưu điểm của học thuyết Phật giáo": ["Tư tưởng vị tha, từ bi, bác ái, tư tưởng cứu khổ, cứu nạn"] }},
+            { questionNumber: 9, questionType: "fill-in-the-blank", questionText: "\"Bây giờ học thuyết nhiều, chủ nghĩa nhiều, nhưng chủ nghĩa chân chính nhất, chắc chắn nhất, cách mạng nhất là chủ nghĩa …\"", options: ["C. Mác", "Tư sản", "Vô sản", "Lênin"], correctAnswer: "Lênin" },
+            { questionNumber: 10, questionType: "fill-in-the-blank", questionText: "\"_____Là tiền đề lý luận quyết định bản chất cách mạng và khoa học của Tư tưởng Hồ Chí Minh\"", options: ["Các học thuyết của Nho giáo", "Tinh hoa văn hóa dân tộc", "Tinh hoa văn hóa phương Đông", "Chủ nghĩa Mác - Lênin", "Phật giáo"], correctAnswer: "Chủ nghĩa Mác - Lênin" },
+            { questionNumber: 11, questionType: "select-multiple", questionText: "Chọn 3 đáp án đúng cho những nhận định của Hồ Chí Minh:", options: ["A. Học thuyết Khổng Tử có ưu điểm là sự tu dưỡng đạo đức cá nhân", "B. Chủ nghĩa Mác có ưu điểm là phương pháp làm việc biện chứng", "C. Tôn giáo Giêsu có ưu điểm là lòng nhân ái cao cả", "D. Chủ nghĩa Mác có ưu điểm là phương pháp làm việc siêu hình"], correctAnswer: ["A", "B", "C"] },
+            { questionNumber: 12, questionType: "fill-in-the-blank", questionText: "\"Trong lúc này nếu không giải quyết được vấn đề _____ không đổi được độc lập tự do cho toàn thể dân tộc...\"", options: ["Giải phóng giai cấp", "Dân chủ nhân dân", "Dân tộc giải phóng"], correctAnswer: "Dân tộc giải phóng" },
+            { questionNumber: 13, questionType: "fill-in-the-blank", questionText: "\"Sự kiện Nguyễn Ái Quốc________đánh dấu bước ngoặt trong cuộc đời của Bác, giúp Người tìm ra con đường cứu nước giải phóng dân tộc\".", options: ["Gửi bản yêu sách của nhân dân An Nam đến hội nhị Vecxay", "Đọc được Sơ thảo lần thứ nhất những luận cương về vấn đề dân tộc và vấn đề thuộc địa của Lênin.", "chức hội nghị hợp nhất các tổ chức cộng sản thành lập Đảng Cộng sản Việt Nam.—"], correctAnswer: "Đọc được Sơ thảo lần thứ nhất những luận cương về vấn đề dân tộc và vấn đề thuộc địa của Lênin." },
+            { questionNumber: 15, questionType: "categorization", questionText: "Kéo thả đáp án vào các cột dưới đây:", options: ["Phải tuân thủ những nguyên tắc cơ bản của chủ nghĩa Mác – Lênin", "Là quyền thiêng liêng, bất khả xâm phạm của tất cả các dân tộc", "Do Đảng Cộng sản lãnh đạo", "Sự thông cảm, tôn trọng lẫn nhau của những người cùng chung lý tưởng đấu tranh", "Độc lập dân tộc phải gắn liền với tự do, hạnh phúc của nhân dân", "Đi theo con đường cách mạng vô sản"], correctAnswer: { "1.Cách mạng giải phóng dân tộc": ["Do Đảng Cộng sản lãnh đạo", "Đi theo con đường cách mạng vô sản"], "2. Vấn đề độc lập dân tộc": ["Là quyền thiêng liêng, bất khả xâm phạm của tất cả các dân tộc", "Độc lập dân tộc phải gắn liền với tự do, hạnh phúc của nhân dân"] }},
+            { questionNumber: 16, questionType: "categorization", questionText: "Kéo thả các yếu tố liên quan đến tư tưởng Hồ Chí Minh về chủ nghĩa xã hội vào các cột tương ứng.", options: ["Nội lực và ngoại lực", "Do nhân dân lao động làm chủ", "Liên minh công – nông", "Vật chất và tinh thần", "Có nền kinh tế phát triển cao", "Phải tuân thủ những nguyên tắc cơ bản của chủ nghĩa Mác – Lênin"], correctAnswer: { "1. Động lực của chủ nghĩa xã hội": ["Nội lực và ngoại lực", "Vật chất và tinh thần"], "2. Đặc trưng của xã hội xã hội chủ nghĩa": ["Liên minh công - nông", "Phải tuân thủ những nguyên tắc cơ bản của chủ nghĩa Mác – Lênin"] }},
+            { questionNumber: 17, questionType: "categorization", questionText: "Kéo thả các yếu tố liên quan đến tư tưởng Hồ Chí Minh về chủ nghĩa xã hội vào các cột tương ứng.", options: ["Kinh tế tư nhân phát triển", "Chống chủ nghĩa cá nhân", "Nền kinh tế công hữu", "Con người chủ nghĩa xã hội", "Văn hóa đại chúng", "Dân chủ nhân dân"], correctAnswer: { "1. Yếu tố xây dựng chủ nghĩa xã hội": ["Chống chủ nghĩa cá nhân", "Con người chủ nghĩa xã hội"], "2. Đặc trưng của chủ nghĩa xã hội": ["Nền kinh tế công hữu", "Văn hóa đại chúng", "Dân chủ nhân dân"] }},
+            { questionNumber: 18, questionType: "matching", questionText: "Ghép các khái niệm ở cột trái với các phát biểu tương ứng ở cột phải:", options: ["Là cơ sở, tiền đề để tiến lên chủ nghĩa xã hội", "Là vấn đề có ý nghĩa chiến lược, quyết định thành công cách mạng", "Là điều kiện để bảo đảm nền độc lập dân tộc vững chắc", "Góp phần chung cho nền hòa bình, độc lập, dân chủ và CNXH trên thế giới"], correctAnswer: { "1--Độc lập dân tộc": "Là cơ sở, tiền đề để tiến lên chủ nghĩa xã hội", "2--Chủ nghĩa xã hội": "Là điều kiện để bảo đảm nền độc lập dân tộc vững chắc", "3--Đại đoàn kết dân tộc": "Là vấn đề có ý nghĩa chiến lược, quyết định thành công cách mạng", "4--Đoàn kết cách mạng thế giới": "Góp phần chung cho nền hòa bình, độc lập, dân chủ và CNXH trên thế giới" }},
+            { questionNumber: 20, questionType: "select-multiple", questionText: "Những cơ sở nào hình thành tư tưởng độc lập dân tộc của Hồ Chí Minh? (chọn 02 đáp án)", options: ["A. Chủ nghĩa yêu nước", "B. Chủ nghĩa tư bản", "C. Chủ nghĩa phong kiến", "D. Đấu tranh chống ngoại xâm"], correctAnswer: ["A", "D"] },
+            { questionNumber: 21, id: 131367, questionType: "categorization", questionText: "Kéo thả các yếu tố liên quan đến mối quan hệ độc lập dân tộc và chủ nghĩa xã hội vào các cột tương ứng.", options: ["Bình đẳng", "Củng cố và tăng cường khối đại đoàn kết dân tộc", "Công bằng", "Hợp lý", "Đảm bảo vai trò lãnh đạo của Đảng Cộng sản"], correctAnswer: { "1. Điều kiện để đảm bảo độc lập dân tộc gắn liền với chủ nghĩa xã hội": ["Đảm bảo vai trò lãnh đạo của Đảng Cộng sản", "Củng cố và tăng cường khối đại đoàn kết dân tộc"], "2. Đặc trưng của chủ nghĩa xã hội": ["Bình đẳng", "Công bằng", "Hợp lý"] }},
+            { questionNumber: 22, id: 131359, questionType: "categorization", questionText: "Kéo thả các yếu tố liên quan đến mối quan hệ độc lập dân tộc và chủ nghĩa xã hội vào các cột tương ứng.", options: ["Củng cố và tăng cường khối đại đoàn kết dân tộc", "Đảm bảo vai trò lãnh đạo của Đảng Cộng sản", "Quyền làm chủ", "Đề cao mục tiêu độc lập dân tộc", "Vận dụng sáng tạo chủ nghĩa Mác – Lênin", "Chống áp bức bóc lột", "Toàn vẹn lãnh thổ"], correctAnswer: { "1. Điều kiện để đảm bảo độc lập dân tộc gắn liền với chủ nghĩa xã hội": ["Củng cố và tăng cường khối đại đoàn kết dân tộc", "Đảm bảo vai trò lãnh đạo của Đảng Cộng sản"], "2.Cơ sở, tiền đề để tiến lên chủ nghĩa xã hội": ["Đề cao mục tiêu độc lập dân tộc", "Vận dụng sáng tạo chủ nghĩa Mác – Lênin", "Chống áp bức bóc lột", "Toàn vẹn lãnh thổ"] }},
+            { questionNumber: 21, id: 131325, questionType: "matching", questionText: "Ghép các khái niệm khớp với phát biểu của tư tưởng Hồ Chí Minh về chủ nghĩa xã hội dưới đây.", options: ["Có tư tưởng và tác phong XHCN", "Do giai cấp nông dân lãnh đạo", "Văn hóa đại chúng", "Nền kinh tế phát triển", "Con người xã hội chủ nghĩa", "Do nhân dân làm chủ", "Xây dựng được chế độ dân chủ"], correctAnswer: { "1--Đặc trưng của chủ nghĩa xã hội": "Do nhân dân làm chủ", "2--Động lực xây dựng chủ nghĩa xã hội": "Con người xã hội chủ nghĩa", "3--Mục tiêu chính trị của chủ nghĩa xã hội": "Xây dựng được chế độ dân chủ", "4--Yếu tố xây dựng con người chủ nghĩa xã -hội": "Có tư tưởng và tác phong XHCN" }},
+            { questionNumber: 22, id: 128613, questionType: "select-multiple", questionText: "Theo quan điểm của Chủ tịch Hồ Chí Minh, nội dung xây dựng Đảng Cộng sản Việt Nam thành một Đảng cách mạng chân chính, bao gồm: (chọn 2 đáp án đúng)", options: ["A. Đảng văn minh là Đảng có quan hệ quốc tế trong sáng, bảo vệ lợi ích của dân tộc Việt Nam", "B. Đảng lấy chủ nghĩa Mác – Lênin làm nền tảng tư tưởng và kim chỉ nam cho mọi hành động", "C. Đảng hoạt động dựa trên khuôn khổ Hiến pháp và pháp luật", "D. Đảng phục vụ lợi ích của Đảng viên trong Đảng"], correctAnswer: ["A", "C"] },
+            { questionNumber: 23, questionType: "fill-in-the-blank", questionText: "\"___ là một truyền thống cực kỳ quý báu của Đảng và của nhân dân ta\"", options: ["Cần cù, chịu khó", "Hiếu học", "Đoàn kết", "Tự do"], correctAnswer: "Đoàn kết" },
+            { questionNumber: 24, questionType: "select-multiple", questionText: "Nguyên tắc tập trung dân chủ theo Hồ Chí Minh yêu cầu đảng viên phải thực hiện những gì? (chọn 2 đáp án đúng)", options: ["A. Hành động theo ý kiến cá nhân", "B. Tuân thủ quyết định của tập thể sau khi thống nhất", "C. Thảo luận dân chủ để đưa ra quyết định", "D. Bỏ qua ý kiến số đông"], correctAnswer: ["B", "C"] },
+            { questionNumber: 25, questionType: "drag-blank", questionText: "\"Nhà nước của ta là Nhà nước dân chủ nhân dân, dựa trên nền tảng ____, do giai cấp công nhân lãnh đạo\"", options: ["Đại đoàn kết giai cấp", "Thống nhất toàn dân", "Liên minh công nông"], correctAnswer: "Liên minh công nông" },
+            { questionNumber: 26, questionType: "select-multiple", questionText: "Theo quan niệm của Chủ tịch Hồ Chí Minh, bản chất của nhà nước Việt Nam là: (chọn 2 đáp án đúng)", options: ["A. Nhà nước của liên minh giai cấp công nhân và nông dân", "B. Nhà nước của toàn dân tộc", "C. Nhà nước mang bản chất của giai cấp công nhân", "D. Nhà nước mang bản chất của giai cấp nông dân"], correctAnswer: ["B", "C"] },
+            { questionNumber: 27, questionType: "select-multiple", questionText: "Theo quan điểm của Hồ Chí Minh, Nhà nước Việt Nam mới là Nhà nước mang bản chất giai cấp công nhân vì sao? (Chọn 3 đáp án đúng)", options: ["A. Nhà nước do Đảng Cộng sản lãnh đạo.", "B. Bản chất giai cấp của Nhà nước ta thể hiện ở tính định hướng XHCN của sự phát triển đất nước.", "C. Bản chất giai cấp công nhân của Nhà nước ta thể hiện ở nguyên tắc tổ chức và hoạt động cơ bản của nó là nguyên tắc tập trung dân chủ", "D. Mục tiêu của Nhà nước Việt Nam từ khi ra đời đến nay luôn gắn với mục tiêu vì quyền lợi của nhân dân, lấy quyền lợi của dân tộc làm nền tảng"], correctAnswer: ["A", "B", "C"] },
+            { questionNumber: 28, questionType: "matching", questionText: "Ghép đáp án đúng về nhà nước theo Tư tưởng Hồ Chí Minh với các nhận định từ 1–5:", options: ["Nhà nước phục vụ lợi ích và nguyện vọng của nhân dân", "Nhà nước do nhân dân sáng lập nên", "Tất cả quyền lực đều thuộc về nhân dân", "Nhà nước tôn trọng và đảm bảo các quyền cơ bản của con người", "Nhà nước quản lý bằng Hiến pháp và pháp luật"], correctAnswer: { "1 -- Nhà nước do dân": "Nhà nước do nhân dân sáng lập nên", "2 -- Nhà nước của dân": "Tất cả quyền lực đều thuộc về nhân dân", "3 -- Nhà nước vì dân": "Nhà nước phục vụ lợi ích và nguyện vọng của nhân dân", "4 -- Nhà nước hợp Hiến": "Nhà nước quản lý bằng Hiến pháp và pháp luật", "5 -- Nhà nước pháp quyền nhân nghĩa": "Nhà nước tôn trọng và đảm bảo các quyền cơ bản của con người" }},
+            { questionNumber: 30, questionType: "select-multiple", questionText: "Theo tư tưởng Hồ Chí Minh, nguyên tắc \"Tập thể lãnh đạo, cá nhân phụ trách\" bao gồm: (Chọn 2 đáp án đúng)", options: ["A. Mọi quyết định quan trọng được thảo luận và thống nhất bởi tập thể lãnh đạo.", "B. Chỉ dựa vào ý kiến của một cá nhân lãnh đạo để ra quyết định.", "C. Mỗi cá nhân phải chịu trách nhiệm cụ thể đối với nhiệm vụ được giao.", "D. Cá nhân được tự do hành động mà không cần tuân theo quyết định của tập thể."], correctAnswer: ["A", "C"] },
+            { questionNumber: 31, questionType: "fill-in-the-blank", questionText: "\"Tham ô, lãng phí và ______ dù có ý hay không, cũng là bạn đồng minh của thực dân và phong kiến...\"", options: ["Tư túng", "Chia rẽ", "Kiêu ngạo", "Bệnh quan liêu"], correctAnswer: "Bệnh quan liêu" },
+            { questionNumber: 32, questionType: "select-multiple", questionText: "Trong nhà nước dân chủ, nhân dân thực thi quyền lực của mình bằng hình thức nào? (chọn 2 đáp án đúng)", options: ["A. Dân chủ trực tiếp", "B. Dân chủ nghị viện", "C. Dân chủ cơ sở", "D. Dân chủ gián tiếp"], correctAnswer: ["A", "D"] },
+            { questionNumber: 33, questionType: "select-multiple", questionText: "Theo quan điểm của Chủ tịch Hồ Chí Minh, thế nào là nhà nước của dân? (chọn 2 đáp án đúng)", options: ["A. Nhà nước do nhân dân sáng lập", "B. Tất cả quyền lực trong nước đều thuộc về nhân dân", "C. Nhà nước phục vụ lợi ích và nguyên vọng của nhân dân", "D. Nhân dân có quyền giải tán những thiết chế quyền lực mà họ lập nên"], correctAnswer: ["B", "D"] },
+            { questionNumber: 34, questionType: "matching", questionText: "Hoàn thành một số câu nói của Hồ Chí Minh về Đảng Cộng sản Việt Nam:", options: ["Đoàn kết", "Đạo đức", "Đạo đức cách mạng", "Đảng cách mệnh"], correctAnswer: { "1--“Mỗi đảng viên và cán bộ phải thực sự thấm nhuần_____, ...”": "Đạo đức cách mạng", "2--“Đảng ta là ___, là văn minh”": "Đạo đức", "3--“_____là truyền thống cực kỳ quý báu của Đảng và dân tộc ta”": "Đoàn kết", "4--“Trước hết phải có______, ...”": "Đảng cách mệnh" }},
+            { questionNumber: 35, questionType: "select-multiple", questionText: "Hồ Chí Minh nhấn mạnh vai trò của Đảng Cộng sản Việt Nam trong việc gì? (chọn 2 đáp án đúng)", options: ["A. Liên lạc với giai cấp vô sản trên thế giới", "B. Phát triển kinh tế cá nhân", "C. Xây dựng văn hóa truyền thống", "D. Tổ chức và vận động quần chúng tham gia phong trào cách mạng"], correctAnswer: ["A", "D"] },
+            { questionNumber: 36, questionType: "select-multiple", questionText: "Theo tư tưởng Hồ Chí Minh, Đảng Cộng sản Việt Nam ra đời là kết quả của sự kết hợp của các yếu tố nào: (chọn 3 đáp án đúng)", options: ["A. Phong trào công nhân", "B. Chủ nghĩa dân tộc", "C. Phong trào yêu nước", "D. Chủ nghĩa Mác – Lê-nin"], correctAnswer: ["A", "C", "D"] },
+            { questionNumber: 37, questionType: "fill-in-the-blank", questionText: "\"Đại đoàn kết tức là trước hết phải đoàn kết đại đa số nhân dân, mà đại đa số nhân dân là công nhân, nông dân và các _____ khác...\"", options: ["Tầng lớp trí thức", "Tầng lớp nhân dân lao động", "Giai cấp", "Tầng lớp lao động"], correctAnswer: "Tầng lớp nhân dân lao động" },
+            { questionNumber: 38, questionType: "select-multiple", questionText: "Trong quan điểm của Chủ tịch Hồ Chí Minh, tại sao phải đoàn kết với 3 nước Đông Dương? (Chọn 3 đáp án đúng)", options: ["A. Ba nước có chung cội nguồn dân tộc", "B. Ba nước nằm trên bán đảo Đông Dương", "C. Ba nước có kẻ thù chung là thực dân Pháp", "D. Ba nước có nhiều điểm tương đồng về lịch sử, văn hóa"], correctAnswer: ["B", "C", "D"] },
+            { questionNumber: 39, questionType: "select-multiple", questionText: "Tư tưởng đoàn kết vì thắng lợi của cách mạng Việt Nam của Chủ tịch Hồ Chí Minh đã định hướng hình thành nên những tầng mặt trận nào? (Chọn 2 đáp án đúng)", options: ["A. Mặt trận nhân dân Á – Phi đoàn kết với Việt Nam", "B. Mặt trận dân chủ", "C. Mặt trận nhân dân giải phóng miền Nam Việt Nam", "D. Mặt trận nhân dân thế giới đoàn kết với Việt Nam chống đế quốc xâm lược"], correctAnswer: ["A", "D"] },
+            { questionNumber: 40, questionType: "categorization", questionText: "Kéo thả đáp án về đoàn kết quốc tế theo Tư tưởng Hồ Chí Minh vào các cột tương ứng:", options: ["Phong trào cộng sản và công nhân quốc tế", "Đoàn kết trên cơ sở độc lập tự chủ", "Phong trào hòa bình dân chủ thế giới", "Phong trào đấu tranh giải phóng dân tộc", "Đoàn kết trên cơ sở thống nhất mục tiêu và lợi ích có lý có tình"], correctAnswer: { "1 – Nguyên tắc đoàn kết quốc tế": ["Phong trào cộng sản và công nhân quốc tế", "Đoàn kết trên cơ sở thống nhất mục tiêu và lợi ích có lý có tình"], "2 – Các lực lượng đoàn kết quốc tế": ["Đoàn kết trên cơ sở độc lập tự chủ", "Phong trào hòa bình dân chủ thế giới", "Phong trào đấu tranh giải phóng dân tộc"] }},
+            { questionNumber: 41, questionType: "select-multiple", questionText: "Hồ Chí Minh cho rằng liên minh công nông là nền tảng của khối đại đoàn kết, vì: (Chọn 2 đáp án đúng)", options: ["A. Vì họ là người trực tiếp sản xuất ra của cải, vật chất", "B. Vì họ là những người có chung nguồn gốc con Lạc, cháu Rồng", "C. Vì ý chí cách mạng của họ chắc chắn, bền bỉ hơn mọi tầng lớp khác", "D. Vì họ là chủ thể của khối đại đoàn kết dân tộc"], correctAnswer: ["A", "C"] },
+            { questionNumber: 42, questionType: "categorization", questionText: "Kéo thả đáp án vào cột tương ứng về đại đoàn kết dân tộc:", options: ["Phải kế thừa truyền thống yêu nước nhân nghĩa đoàn kết của dân tộc", "Phải có lòng khoan dung độ lượng với con người", "Là mục tiêu nhiệm vụ hàng đầu của cách mạng Việt Nam", "Là vấn đề có ý nghĩa chiến lược quyết định thành công của cách mạng"], correctAnswer: { "1 – Vai trò của khối đại đoàn kết dân tộc": ["Là mục tiêu nhiệm vụ hàng đầu của cách mạng Việt Nam", "Là vấn đề có ý nghĩa chiến lược quyết định thành công của cách mạng"], "2 – Điều kiện của khối đại đoàn kết dân tộc": ["Phải kế thừa truyền thống yêu nước nhân nghĩa đoàn kết của dân tộc", "Phải có lòng khoan dung độ lượng với con người"] }},
+            { questionNumber: 43, questionType: "categorization", questionText: "Kéo thả đáp án về nguyên tắc đoàn kết quốc tế vào các cột tương ứng:", options: ["Khắc phục tư tưởng sôvanh \"nước lớn\" \"đảng lớn\"", "Sự thông cảm tôn trọng lẫn nhau của những người cùng chung lý tưởng đấu tranh", "Phải tuân thủ những nguyên tắc cơ bản của chủ nghĩa Mác – Lênin", "Vận dụng sáng tạo chủ nghĩa Mác – Lênin có hiệu quả vào hoạt động thực tế của mỗi nước mỗi Đảng tránh giáo điều"], correctAnswer: { "1 – Đoàn kết quốc tế trên cơ sở có lý": ["Phải tuân thủ những nguyên tắc cơ bản của chủ nghĩa Mác – Lênin", "Vận dụng sáng tạo chủ nghĩa Mác – Lênin có hiệu quả vào hoạt động thực tế của mỗi nước mỗi Đảng tránh giáo điều"], "2 – Đoàn kết quốc tế trên cơ sở có tình": ["Khắc phục tư tưởng sôvanh \"nước lớn\" \"đảng lớn\"", "Sự thông cảm tôn trọng lẫn nhau của những người cùng chung lý tưởng đấu tranh"] }},
+            { questionNumber: 44, questionType: "select-multiple", questionText: "Chọn ra 2 đáp án đúng về tên Mặt trận dân tộc thống nhất qua các thời kỳ lịch sử:", options: ["A. Mặt trận Dân chủ Đông Dương", "B. Mặt trận Đồng minh Đông Dương", "C. Liên minh các lực lượng yêu chuộng hòa bình ở Việt Nam", "D. Mặt trận dân tộc giải phóng miền Nam Việt Nam"], correctAnswer: ["A", "D"] },
+            { questionNumber: 45, questionType: "select-multiple", questionText: "Theo Hồ Chí Minh, phương thức xây dựng khối Mặt trận dân tộc là: (Chọn 2 đáp án đúng)", options: ["A. Làm tốt công tác dân vận.", "B. Tự lực cánh sinh, dựa vào sức mình là chính.", "C. Thành lập đoàn thể, tổ chức quần chúng phù hợp với từng đối tượng.", "D. Dựa vào nguồn lực ngoại sinh là chính."], correctAnswer: ["B", "C"] },
+            { questionNumber: 46, questionType: "select-multiple", questionText: "Nội dung nào sau đây phản ánh đúng tư tưởng Hồ Chí Minh về đại đoàn kết dân tộc? (Chọn 2 đáp án đúng)", options: ["A. Đại đoàn kết là chiến lược lâu dài của cách mạng", "B. Đoàn kết chỉ cần trong giai đoạn kháng chiến chống ngoại xâm", "C. Phải khoan dung, độ lượng với người có quá khứ phản cách mạng nhưng đã hối cải", "D. Không cần đoàn kết với người giàu có"], correctAnswer: ["A", "C"] },
+            { questionNumber: 47, questionType: "select-multiple", questionText: "Theo Hồ Chí Minh, nguyên tắc để Việt Nam đoàn kết với các nước trên thế giới là: (Chọn 2 đáp án đúng)", options: ["A. Đoàn kết trên cơ sở độc lập, tự chủ", "B. Đoàn kết trên để tranh thủ viện trợ vũ khí và tài chính", "C. Chỉ đoàn kết với các nước trong phe xã hội chủ nghĩa", "D. Đoàn kết trên cơ sở thống nhất lợi ích và mục tiêu có lý, có tình"], correctAnswer: ["A", "D"] },
+            { questionNumber: 48, questionType: "select-multiple", questionText: "Theo Hồ Chí Minh, đoàn kết quốc tế là: (Chọn 2 đáp án đúng)", options: ["A. Một chiến lược tạm thời để tranh thủ sự viện trợ", "B. Một nguyên tắc mang tính chiến lược lâu dài", "C. Một đòi hỏi khách quan nhằm mục tiêu giải phóng dân tộc và phát triển đất nước của Việt Nam", "D. Chỉ cần thiết trong kháng chiến chống ngoại xâm"], correctAnswer: ["B", "C"] },
+            { questionNumber: 49, questionType: "fill-in-the-blank", questionText: "\"Một dân tộc không _____ mà cứ ngồi chờ dân tộc khác giúp đỡ thì không xứng đáng được độc lập\".", options: ["Tự giải phóng mình", "Có thực lực", "Dựa vào sức mình là chính", "Tự lực cánh sinh"], correctAnswer: "Tự lực cánh sinh" }
+        ];
+
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(questionsData.length).fill(null);
+        const quizArea = document.getElementById('quiz-area');
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const lockBtn = document.getElementById('lockBtn');
+        const progressText = document.getElementById('progressText');
+        const progressBar = document.getElementById('progressBar');
+        const overviewGrid = document.getElementById('overviewGrid');
+
+        // Shuffle utilities and one-time preparation
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Display helper: hide leading numeric prefixes like "1--", "2 - " for UI only
+        function formatVisibleText(text) {
+            if (typeof text !== 'string') return text;
+            return text.replace(/^\s*\d+\s*[-–—.]*\s*/, '').trim();
+        }
+
+        // --- Audio feedback (no external files; uses Web Audio API) ---
+        let audioContextInstance = null;
+        function getAudioContext() {
+            if (!audioContextInstance) {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                if (Ctx) audioContextInstance = new Ctx();
+            }
+            return audioContextInstance;
+        }
+        function playTone(frequency, duration = 0.15, type = 'sine', gainValue = 0.06) {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            const oscillator = ctx.createOscillator();
+            const gain = ctx.createGain();
+            oscillator.type = type;
+            oscillator.frequency.value = frequency;
+            gain.gain.value = gainValue;
+            oscillator.connect(gain);
+            gain.connect(ctx.destination);
+            const now = ctx.currentTime;
+            oscillator.start(now);
+            oscillator.stop(now + duration);
+        }
+        function playSuccessSound() {
+            // small two-note chime
+            playTone(880, 0.12, 'sine', 0.08);
+            setTimeout(() => playTone(1175, 0.18, 'sine', 0.07), 90);
+        }
+        function playErrorSound() {
+            // brief buzz effect
+            for (let i = 0; i < 6; i++) {
+                setTimeout(() => playTone(220 + (i % 2 ? 30 : -30), 0.06, 'square', 0.05), i * 60);
+            }
+        }
+
+        // Convert all fill-in-the-blank to drag-blank for consistent UX
+        questionsData.forEach(q => {
+            if (q.questionType === 'fill-in-the-blank') q.questionType = 'drag-blank';
+        });
+
+        // Randomize the order of questions
+        shuffleArray(questionsData);
+        // Pre-shuffle options per question to keep stable across renders
+        questionsData.forEach(q => {
+            if (q.options && Array.isArray(q.options)) {
+                if (q.questionType === 'select-multiple') {
+                    // For select-multiple, only shuffle the content, keep A,B,C,D labels in order
+                    const optionsWithLabels = q.options.map(opt => {
+                        const match = opt.match(/^([A-D])\.\s*(.+)$/);
+                        if (match) {
+                            return { label: match[1], content: match[2] };
+                        }
+                        return { label: '', content: opt };
+                    });
+                    
+                    // Shuffle only the content, keep labels in A,B,C,D order
+                    const shuffledContent = shuffleArray(optionsWithLabels.map(o => o.content));
+                    q._optionsShuffled = optionsWithLabels.map((opt, index) => 
+                        opt.label ? `${opt.label}. ${shuffledContent[index]}` : shuffledContent[index]
+                    );
+                    
+                    // Create mapping for correct answers: old label -> new label based on content
+                    q._answerMapping = {};
+                    const originalContentToLabel = {};
+                    optionsWithLabels.forEach(opt => {
+                        if (opt.label) {
+                            originalContentToLabel[opt.content] = opt.label;
+                        }
+                    });
+                    
+                    // Map each shuffled content to its new label
+                    shuffledContent.forEach((content, newIndex) => {
+                        const originalLabel = originalContentToLabel[content];
+                        if (originalLabel) {
+                            const newLabel = String.fromCharCode(65 + newIndex); // A, B, C, D
+                            q._answerMapping[originalLabel] = newLabel;
+                        }
+                    });
+                } else {
+                    q._optionsShuffled = shuffleArray([...q.options]);
+                }
+            }
+            // Shuffle category columns order for categorization
+            if (q.questionType === 'categorization' && q.correctAnswer && typeof q.correctAnswer === 'object') {
+                q._categoriesShuffled = shuffleArray(Object.keys(q.correctAnswer));
+            }
+            // Shuffle premises order for matching
+            if (q.questionType === 'matching' && q.correctAnswer && typeof q.correctAnswer === 'object') {
+                q._premisesShuffled = shuffleArray(Object.keys(q.correctAnswer));
+            }
+        });
+
+        // State for lock-first-attempt grading
+        const firstAttemptDone = new Array(questionsData.length).fill(false);
+        const firstAttemptCorrect = new Array(questionsData.length).fill(false);
+        const canProceed = new Array(questionsData.length).fill(false);
+        
+        // Touch mode detection and state
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        let touchMode = false;
+        let selectedItem = null;
+
+        function getQuestionTypeName(type) {
+            const types = {'fill-in-the-blank': 'Điền vào chỗ trống', 'drag-blank': 'Kéo thả vào chỗ trống', 'categorization': 'Phân loại', 'select-multiple': 'Chọn nhiều đáp án', 'matching': 'Ghép cặp'};
+            return types[type] || type;
+        }
+
+        function saveAnswer() {
+            const qData = questionsData[currentQuestionIndex];
+            const qElement = quizArea.querySelector('.question');
+            if (!qElement) return;
+
+            switch (qData.questionType) {
+                case 'fill-in-the-blank':
+                    const selectedOption = qElement.querySelector('.option.selected');
+                    userAnswers[currentQuestionIndex] = selectedOption ? selectedOption.dataset.value : null;
+                    break;
+                case 'select-multiple':
+                    const selectedChecks = Array.from(qElement.querySelectorAll('.checkbox-option.selected')).map(el => el.dataset.value);
+                    userAnswers[currentQuestionIndex] = selectedChecks.length > 0 ? selectedChecks : null;
+                    break;
+                case 'categorization':
+                    const catAnswers = {};
+                    qElement.querySelectorAll('.drop-zone').forEach(zone => {
+                        const title = zone.dataset.categoryTitle;
+                        catAnswers[title] = Array.from(zone.querySelectorAll('.draggable-item')).map(i => i.textContent);
+                    });
+                    userAnswers[currentQuestionIndex] = catAnswers;
+                    break;
+                case 'drag-blank': {
+                    const zones = qElement.querySelectorAll('.blank-drop-zone');
+                    if (zones.length > 1) {
+                        const stored = qElement.dataset.selectedPair || null;
+                        userAnswers[currentQuestionIndex] = stored && stored.length ? stored : null;
+                    } else {
+                        const zone = qElement.querySelector('.blank-drop-zone');
+                        const dropped = zone ? zone.querySelector('.draggable-item') : null;
+                        userAnswers[currentQuestionIndex] = dropped ? dropped.textContent : null;
+                    }
+                    break; }
+                case 'matching':
+                    const matchAnswers = {};
+                    qElement.querySelectorAll('.matching-premise').forEach(premise => {
+                        const key = premise.querySelector('.matching-drop-zone').dataset.categoryTitle;
+                        const droppedItem = premise.querySelector('.draggable-item');
+                        if (droppedItem) {
+                           matchAnswers[key] = droppedItem.textContent;
+                        }
+                    });
+                    userAnswers[currentQuestionIndex] = matchAnswers;
+                    break;
+            }
+        }
+
+        function hasAnyAnswer(qData, answer) {
+            if (answer === null) return false;
+            if (qData.questionType === 'fill-in-the-blank') return typeof answer === 'string' && answer.length > 0;
+            if (qData.questionType === 'select-multiple') return Array.isArray(answer) && answer.length > 0;
+            if (qData.questionType === 'categorization' || qData.questionType === 'matching') {
+                const keys = Object.keys(answer || {});
+                for (let k of keys) {
+                    if ((answer[k] || []).length > 0) return true;
+                }
+                return false;
+            }
+            if (qData.questionType === 'drag-blank') return typeof answer === 'string' && answer.length > 0;
+            return false;
+        }
+
+        function getQuestionStatusByIndex(index) {
+            const qData = questionsData[index];
+            const ans = userAnswers[index];
+            if (!hasAnyAnswer(qData, ans)) return 'empty';
+            if (firstAttemptDone[index]) return firstAttemptCorrect[index] ? 'correct' : 'incorrect';
+            return 'answered';
+        }
+
+        function buildOverview() {
+            overviewGrid.innerHTML = '';
+            questionsData.forEach((_, idx) => {
+                const item = document.createElement('div');
+                item.className = 'overview-item';
+                item.textContent = idx + 1;
+                item.addEventListener('click', () => {
+                    saveAnswer();
+                    currentQuestionIndex = idx;
+                    showQuestion(currentQuestionIndex);
+                });
+                overviewGrid.appendChild(item);
+            });
+            updateOverview();
+        }
+
+        function updateOverview() {
+            const children = Array.from(overviewGrid.children);
+            children.forEach((el, idx) => {
+                el.classList.remove('empty', 'answered', 'correct', 'incorrect', 'active');
+                el.classList.add(getQuestionStatusByIndex(idx));
+                if (idx === currentQuestionIndex) el.classList.add('active');
+            });
+        }
+
+        function isAnswerCorrect(qData, answer) {
+            if (!hasAnyAnswer(qData, answer)) return false;
+            if (qData.questionType === 'fill-in-the-blank') {
+                return answer === qData.correctAnswer;
+            }
+            if (qData.questionType === 'select-multiple') {
+                // Map the original correct answers to new labels after shuffling
+                const mappedCorrectAnswer = qData.correctAnswer.map(label => qData._answerMapping[label] || label);
+                return JSON.stringify([...answer].sort()) === JSON.stringify([...mappedCorrectAnswer].sort());
+            }
+            if (qData.questionType === 'drag-blank') {
+                return answer === qData.correctAnswer;
+            }
+            if (qData.questionType === 'categorization') {
+                let correctCount = 0;
+                const correctKeys = Object.keys(qData.correctAnswer);
+                for (let cat of correctKeys) {
+                    const correctItems = Array.isArray(qData.correctAnswer[cat]) ? qData.correctAnswer[cat] : [qData.correctAnswer[cat]];
+                    const userItemsRaw = answer[cat] ?? [];
+                    const userItems = Array.isArray(userItemsRaw) ? userItemsRaw : [userItemsRaw];
+                    if (JSON.stringify([...correctItems].sort()) === JSON.stringify([...userItems].sort())) correctCount++;
+                }
+                return correctCount === correctKeys.length;
+            }
+            if (qData.questionType === 'matching') {
+                const correctKeys = Object.keys(qData.correctAnswer);
+                for (let cat of correctKeys) {
+                    const expected = qData.correctAnswer[cat];
+                    const userVal = answer[cat];
+                    if (!userVal || userVal !== expected) return false;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        function loadAnswer(qElement, qData) {
+            const answer = userAnswers[currentQuestionIndex];
+            if (answer === null || (typeof answer === 'object' && Object.keys(answer).length === 0)) return;
+
+            switch (qData.questionType) {
+                case 'fill-in-the-blank':
+                    const optionToSelect = qElement.querySelector(`.option[data-value="${answer}"]`);
+                    if (optionToSelect) optionToSelect.classList.add('selected');
+                    break;
+                case 'select-multiple':
+                    answer.forEach(val => {
+                        const checkToSelect = qElement.querySelector(`.checkbox-option[data-value="${val}"]`);
+                        if (checkToSelect) checkToSelect.classList.add('selected');
+                    });
+                    break;
+                case 'drag-blank': {
+                    const sourceItems = Array.from(qElement.querySelectorAll('.draggable-items-source .draggable-item'));
+                    const zones = qElement.querySelectorAll('.blank-drop-zone');
+                    if (zones.length > 1 && typeof answer === 'string') {
+                        const itemToMove = sourceItems.find(el => el.textContent === answer);
+                        if (itemToMove) {
+                            // Simulate multi-blank placement
+                            const parts = answer.split(/\s*[–-]\s*/);
+                            // hide real draggable in first zone for retrieval
+                            zones[0].appendChild(itemToMove);
+                            itemToMove.style.display = 'none';
+                            // render tokens for each blank
+                            zones.forEach((bz, idx) => {
+                                Array.from(bz.querySelectorAll('.token')).forEach(n => n.remove());
+                                const token = document.createElement('span');
+                                token.className = 'token';
+                                token.textContent = parts[idx] || parts[parts.length - 1] || '';
+                                bz.appendChild(token);
+                            });
+                            qElement.dataset.selectedPair = answer;
+                        }
+                    } else {
+                        const zone = qElement.querySelector('.blank-drop-zone');
+                        if (zone) {
+                            const itemToMove = sourceItems.find(el => el.textContent === answer);
+                            if (itemToMove) zone.appendChild(itemToMove);
+                        }
+                    }
+                    break; }
+                case 'categorization': {
+                    const sourceItems = Array.from(qElement.querySelectorAll('.draggable-items-source .draggable-item'));
+                    Object.keys(answer).forEach(containerTitle => {
+                        const container = qElement.querySelector(`.drop-zone[data-category-title="${containerTitle}"]`);
+                        if(container) {
+                            const valsRaw = answer[containerTitle];
+                            const values = Array.isArray(valsRaw) ? valsRaw : [valsRaw];
+                            values.forEach(itemText => {
+                                const itemToMove = sourceItems.find(el => el.textContent === itemText);
+                                if (itemToMove) container.appendChild(itemToMove);
+                            });
+                        }
+                    });
+                    break; }
+                case 'matching': {
+                    const sourceItems = Array.from(qElement.querySelectorAll('.draggable-items-source .draggable-item'));
+                    Object.keys(answer).forEach(premiseTitle => {
+                        const container = qElement.querySelector(`.drop-zone[data-category-title="${premiseTitle}"]`);
+                        if (container) {
+                            const itemText = answer[premiseTitle];
+                            const itemToMove = sourceItems.find(el => el.textContent === itemText);
+                            if (itemToMove) container.appendChild(itemToMove);
+                        }
+                    });
+                    break; }
+            }
+        }
+
+        function showQuestion(index) {
+            const q = questionsData[index];
+            quizArea.innerHTML = ''; 
+            
+            // Reset touch mode state
+            touchMode = false;
+            selectedItem = null;
+
+            const questionDiv = document.createElement('div');
+            questionDiv.className = `question ${q.questionType}`;
+            
+            let contentHTML = `
+                <div class="question-header">
+                    <div class="question-number">${index + 1}</div>
+                    <div class="question-type">${getQuestionTypeName(q.questionType)}</div>
+                </div>
+                <div class="question-text">${q.questionText}</div>
+            `;
+
+            switch (q.questionType) {
+                case 'fill-in-the-blank':
+                    contentHTML += '<div class="options-container">';
+                    (q._optionsShuffled || q.options).forEach(opt => contentHTML += `<div class="option" data-value="${opt}">${opt}</div>`);
+                    contentHTML += '</div>';
+                    break;
+                case 'drag-blank': {
+                    // Insert a drop zone: prioritize underscores, then ellipsis, else append at end
+                    const dropZoneHtml = '<span class="drop-zone blank-drop-zone" data-category-title="blank"></span>';
+                    let renderedText = q.questionText;
+                    if (/_+/.test(renderedText)) {
+                        renderedText = renderedText.replace(/_+/g, dropZoneHtml);
+                    } else if (renderedText.includes('…')) {
+                        renderedText = renderedText.replace('…', dropZoneHtml);
+                    } else if (renderedText.includes('...')) {
+                        renderedText = renderedText.replace('...', dropZoneHtml);
+                    } else {
+                        renderedText = `${renderedText} ${dropZoneHtml}`;
+                    }
+                    const sentence = renderedText;
+                    contentHTML = `
+                        <div class="question-header">
+                            <div class="question-number">${index + 1}</div>
+                            <div class="question-type">${getQuestionTypeName(q.questionType)}</div>
+                        </div>
+                        <div class="question-text">${sentence}</div>
+                    `;
+                    contentHTML += '<p><strong>Các lựa chọn:</strong></p><div class="draggable-items-source">';
+                    (q._optionsShuffled || q.options).forEach(opt => contentHTML += `<div class="draggable-item" draggable="true">${opt}</div>`);
+                    contentHTML += '</div>';
+                    break; }
+                case 'select-multiple':
+                     contentHTML += '<div class="options-container">';
+                    (q._optionsShuffled || q.options).forEach(opt => {
+                        const value = opt.split('.')[0];
+                        contentHTML += `<div class="checkbox-option" data-value="${value}"><div class="checkbox"></div><div>${opt}</div></div>`;
+                    });
+                    contentHTML += '</div>';
+                    break;
+                case 'categorization':
+                    contentHTML += '<div class="categories-container">';
+                    (q._categoriesShuffled || Object.keys(q.correctAnswer)).forEach(cat => {
+                        const visibleCat = formatVisibleText(cat);
+                        contentHTML += `<div class="category"><div class="category-title">${visibleCat}</div><div class="drop-zone" data-category-title="${cat}"></div></div>`;
+                    });
+                    contentHTML += '</div><p><strong>Các lựa chọn:</strong></p><div class="draggable-items-source">';
+                    (q._optionsShuffled || q.options).forEach(opt => contentHTML += `<div class="draggable-item" draggable="true">${opt}</div>`);
+                    contentHTML += '</div>';
+                    break;
+                case 'matching':
+                    (q._premisesShuffled || Object.keys(q.correctAnswer)).forEach(premise => {
+                        const visiblePremise = formatVisibleText(premise);
+                        contentHTML += `<div class="matching-premise"><span class="matching-premise-text">${visiblePremise}</span><div class="drop-zone matching-drop-zone" data-category-title="${premise}"></div></div>`
+                    });
+                    contentHTML += '<p><strong>Các lựa chọn:</strong></p><div class="draggable-items-source">';
+                    (q._optionsShuffled || q.options).forEach(opt => contentHTML += `<div class="draggable-item" draggable="true">${opt}</div>`);
+                    contentHTML += '</div>';
+                    break;
+            }
+            questionDiv.innerHTML = contentHTML;
+            quizArea.appendChild(questionDiv);
+
+            // feedback placeholder
+            const fb = document.createElement('div');
+            fb.id = 'feedback';
+            fb.className = 'feedback';
+            quizArea.appendChild(fb);
+
+            loadAnswer(questionDiv, q);
+            attachEventListenersForCurrentQuestion();
+            updateNavigation();
+            updateOverview();
+
+            // restore feedback state
+            if (firstAttemptDone[index]) {
+                const answer = userAnswers[index];
+                const ok = isAnswerCorrect(q, answer);
+                renderFeedback(ok);
+                if (canProceed[index]) disableInteractions(questionDiv);
+            } else {
+                renderFeedback(null);
+            }
+        }
+
+        function enableTouchMode(qElement, draggables, dropZones, sourceContainers) {
+            touchMode = true;
+            selectedItem = null;
+            
+            // Add touch mode classes
+            draggables.forEach(item => item.classList.add('touch-mode'));
+            dropZones.forEach(zone => zone.classList.add('touch-mode'));
+            
+            // Handle item selection
+            draggables.forEach(item => {
+                item.addEventListener('click', () => {
+                    if (selectedItem) selectedItem.classList.remove('selected');
+                    selectedItem = item;
+                    item.classList.add('selected');
+                    
+                    // Visual feedback
+                    dropZones.forEach(zone => zone.classList.add('touch-mode'));
+                });
+            });
+            
+            // Handle drop zone clicks
+            dropZones.forEach(zone => {
+                zone.addEventListener('click', () => {
+                    if (!selectedItem) return;
+                    
+                    // Special handling for matching (only one item per zone)
+                    if (zone.classList.contains('matching-drop-zone') && zone.children.length > 0) {
+                        const sourceContainer = qElement.querySelector('.draggable-items-source');
+                        sourceContainer.appendChild(zone.firstElementChild);
+                    }
+                    
+                    // Special handling for drag-blank with multiple blanks
+                    if (qElement.classList.contains('drag-blank') && zone.classList.contains('blank-drop-zone')) {
+                        const blanks = qElement.querySelectorAll('.blank-drop-zone');
+                        if (blanks.length > 1) {
+                            const pairText = selectedItem.textContent.trim();
+                            const parts = pairText.split(/\s*[–-]\s*/);
+                            
+                            // Hide the real item in first blank
+                            blanks[0].appendChild(selectedItem);
+                            selectedItem.style.display = 'none';
+                            
+                            // Create tokens for each blank
+                            blanks.forEach((bz, idx) => {
+                                Array.from(bz.querySelectorAll('.token')).forEach(n => n.remove());
+                                const token = document.createElement('span');
+                                token.className = 'token';
+                                token.textContent = parts[idx] || parts[parts.length - 1] || '';
+                                bz.appendChild(token);
+                            });
+                            qElement.dataset.selectedPair = pairText;
+                        } else {
+                            zone.appendChild(selectedItem);
+                        }
+                    } else {
+                        zone.appendChild(selectedItem);
+                    }
+                    
+                    selectedItem.classList.remove('selected');
+                    selectedItem = null;
+                    saveAnswer();
+                    updateOverview();
+                });
+            });
+            
+            // Handle source container clicks (return items)
+            sourceContainers.forEach(source => {
+                source.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('draggable-item')) {
+                        if (selectedItem) selectedItem.classList.remove('selected');
+                        selectedItem = e.target;
+                        selectedItem.classList.add('selected');
+                    }
+                });
+            });
+        }
+
+        function attachEventListenersForCurrentQuestion() {
+            const qElement = quizArea.querySelector('.question');
+            if(!qElement) return;
+
+            qElement.querySelectorAll('.option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    qElement.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+                    opt.classList.add('selected');
+                });
+            });
+
+            qElement.querySelectorAll('.checkbox-option').forEach(opt => {
+                opt.addEventListener('click', () => opt.classList.toggle('selected'));
+            });
+
+            const draggables = qElement.querySelectorAll('.draggable-item');
+            const dropZones = qElement.querySelectorAll('.drop-zone');
+            const sourceContainers = qElement.querySelectorAll('.draggable-items-source');
+            
+            // Enable touch mode for drag & drop questions
+            if (isTouchDevice && (qElement.classList.contains('categorization') || 
+                qElement.classList.contains('matching') || qElement.classList.contains('drag-blank'))) {
+                enableTouchMode(qElement, draggables, dropZones, sourceContainers);
+            } else {
+                // Regular drag & drop for desktop
+                draggables.forEach(draggable => {
+                    draggable.addEventListener('dragstart', () => draggable.classList.add('dragging'));
+                    draggable.addEventListener('dragend', () => draggable.classList.remove('dragging'));
+                });
+            }
+            // Only add drag & drop listeners if not in touch mode
+            if (!touchMode) {
+                dropZones.forEach(zone => {
+                    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+                    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+                    zone.addEventListener('drop', e => {
+                        e.preventDefault();
+                        zone.classList.remove('drag-over');
+                        const dragging = document.querySelector('.dragging');
+                        // Allow only one item in matching drop zones
+                        if (zone.classList.contains('matching-drop-zone') && zone.children.length > 0) {
+                            const sourceContainer = qElement.querySelector('.draggable-items-source');
+                            sourceContainer.appendChild(zone.firstElementChild);
+                        }
+                        // Special handling for drag-blank with multiple blanks
+                        if (qElement.classList.contains('drag-blank') && zone.classList.contains('blank-drop-zone')) {
+                            const blanks = qElement.querySelectorAll('.blank-drop-zone');
+                            if (blanks.length > 1 && dragging) {
+                                const pairText = dragging.textContent.trim();
+                                const parts = pairText.split(/\s*[–-]\s*/);
+                                // hide the real draggable in the first blank for later retrieval
+                                blanks[0].appendChild(dragging);
+                                dragging.style.display = 'none';
+                                blanks.forEach((bz, idx) => {
+                                    Array.from(bz.querySelectorAll('.token')).forEach(n => n.remove());
+                                    const token = document.createElement('span');
+                                    token.className = 'token';
+                                    token.textContent = parts[idx] || parts[parts.length - 1] || '';
+                                    bz.appendChild(token);
+                                });
+                                qElement.dataset.selectedPair = pairText;
+                                saveAnswer();
+                                updateOverview();
+                                return;
+                            }
+                        }
+                        if (dragging) zone.appendChild(dragging);
+                        saveAnswer();
+                        updateOverview();
+                    });
+                });
+            }
+
+            // Allow dragging answers back to the source container (only if not in touch mode)
+            if (!touchMode) {
+                sourceContainers.forEach(source => {
+                    source.addEventListener('dragover', e => { e.preventDefault(); source.classList.add('drag-over'); });
+                    source.addEventListener('dragleave', () => source.classList.remove('drag-over'));
+                    source.addEventListener('drop', e => {
+                        e.preventDefault();
+                        source.classList.remove('drag-over');
+                        const dragging = document.querySelector('.dragging');
+                        if (qElement.classList.contains('drag-blank')) {
+                            const blanks = qElement.querySelectorAll('.blank-drop-zone');
+                            if (blanks.length > 1) {
+                                // return hidden draggable to source and clear tokens
+                                const hidden = blanks[0].querySelector('.draggable-item');
+                                if (hidden) {
+                                    hidden.style.display = '';
+                                    source.appendChild(hidden);
+                                }
+                                blanks.forEach(bz => Array.from(bz.querySelectorAll('.token')).forEach(n => n.remove()));
+                                delete qElement.dataset.selectedPair;
+                            }
+                        }
+                        if (dragging) source.appendChild(dragging);
+                        saveAnswer();
+                        updateOverview();
+                    });
+                });
+            }
+        }
+
+        function disableInteractions(qElement) {
+            qElement.querySelectorAll('.option, .checkbox-option, .draggable-item').forEach(el => {
+                el.style.pointerEvents = 'none';
+                el.style.opacity = '0.8';
+            });
+        }
+
+        function renderFeedback(ok) {
+            const fb = document.getElementById('feedback');
+            if (!fb) return;
+            fb.classList.remove('ok','err');
+            if (ok === true) {
+                fb.textContent = 'Chính xác! Bạn có thể sang câu tiếp theo.';
+                fb.classList.add('ok');
+                playSuccessSound();
+            } else if (ok === false) {
+                fb.textContent = 'Chưa đúng. Hãy điều chỉnh và chốt lại đáp án!';
+                fb.classList.add('err');
+                playErrorSound();
+            } else {
+                fb.textContent = '';
+            }
+        }
+
+        function updateNavigation() {
+            progressText.textContent = `Câu ${currentQuestionIndex + 1} / ${questionsData.length}`;
+            progressBar.style.width = `${((currentQuestionIndex + 1) / questionsData.length) * 100}%`;
+            prevBtn.disabled = currentQuestionIndex === 0;
+
+            // Control next button
+            nextBtn.disabled = !canProceed[currentQuestionIndex];
+            if (currentQuestionIndex === questionsData.length - 1) {
+                nextBtn.textContent = 'Nộp bài';
+                nextBtn.style.background = '#28a745';
+                nextBtn.style.borderColor = '#28a745';
+                nextBtn.style.color = 'white';
+            } else {
+                nextBtn.textContent = 'Câu sau';
+                nextBtn.style.background = '';
+                nextBtn.style.borderColor = '';
+                nextBtn.style.color = '';
+            }
+        }
+
+        function showResults() {
+            let score = 0;
+            firstAttemptCorrect.forEach(ok => { if (ok) score++; });
+            
+            quizArea.style.display = 'none';
+            document.querySelector('.quiz-navigation').style.display = 'none';
+            document.querySelector('.progress-container').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('score').textContent = `Kết quả: ${score} / ${questionsData.length}`;
+        }
+
+        nextBtn.addEventListener('click', () => {
+            if (!canProceed[currentQuestionIndex]) return;
+            if (currentQuestionIndex < questionsData.length - 1) {
+                currentQuestionIndex++;
+                showQuestion(currentQuestionIndex);
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            saveAnswer();
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                showQuestion(currentQuestionIndex);
+            }
+        });
+
+        lockBtn.addEventListener('click', () => {
+            saveAnswer();
+            const qData = questionsData[currentQuestionIndex];
+            const answer = userAnswers[currentQuestionIndex];
+            if (!hasAnyAnswer(qData, answer)) {
+                renderFeedback(false);
+                return;
+            }
+            const ok = isAnswerCorrect(qData, answer);
+            // Record first attempt only once
+            if (!firstAttemptDone[currentQuestionIndex]) {
+                firstAttemptDone[currentQuestionIndex] = true;
+                firstAttemptCorrect[currentQuestionIndex] = ok;
+            }
+            if (ok) {
+                canProceed[currentQuestionIndex] = true;
+                const qElement = quizArea.querySelector('.question');
+                if (qElement) disableInteractions(qElement);
+            }
+            renderFeedback(ok);
+            updateNavigation();
+            updateOverview();
+        });
+
+        // Keyboard: Enter to lock; if allowed, Enter goes next
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (canProceed[currentQuestionIndex]) {
+                    // advance or submit
+                    if (currentQuestionIndex < questionsData.length - 1) {
+                        currentQuestionIndex++;
+                        showQuestion(currentQuestionIndex);
+                    } else {
+                        showResults();
+                    }
+                } else {
+                    lockBtn.click();
+                }
+            }
+        });
+
+        buildOverview();
+        showQuestion(currentQuestionIndex);
+    });
+    </script>
+</body>
+</html>
