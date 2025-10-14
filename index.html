@@ -54,7 +54,7 @@
 
         /* Option Styles */
         .options-container, .categories-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
-        .option, .checkbox-option { background: white; border: 2px solid #ddd; border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s ease; white-space: normal; word-wrap: break-word; overflow-wrap: break-word; }
+        .option, .checkbox-option { background: white; border: 2px solid #ddd; border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s ease; }
         .option:hover, .checkbox-option:hover { border-color: #667eea; background: #f0f2ff; transform: translateY(-2px); }
         .option.selected, .checkbox-option.selected { border-color: #667eea; background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
         .checkbox-option { display: flex; align-items: center; }
@@ -182,7 +182,7 @@
             { questionNumber: 12, questionType: "fill-in-the-blank", questionText: "\"Trong lúc này nếu không giải quyết được vấn đề _____ không đổi được độc lập tự do cho toàn thể dân tộc...\"", options: ["Giải phóng giai cấp", "Dân chủ nhân dân", "Dân tộc giải phóng"], correctAnswer: "Dân tộc giải phóng" },
             { questionNumber: 13, questionType: "fill-in-the-blank", questionText: "\"Sự kiện Nguyễn Ái Quốc________đánh dấu bước ngoặt trong cuộc đời của Bác, giúp Người tìm ra con đường cứu nước giải phóng dân tộc\".", options: ["Gửi bản yêu sách của nhân dân An Nam đến hội nhị Vecxay", "Đọc được Sơ thảo lần thứ nhất những luận cương về vấn đề dân tộc và vấn đề thuộc địa của Lênin.", "chức hội nghị hợp nhất các tổ chức cộng sản thành lập Đảng Cộng sản Việt Nam.—"], correctAnswer: "Đọc được Sơ thảo lần thứ nhất những luận cương về vấn đề dân tộc và vấn đề thuộc địa của Lênin." },
             { questionNumber: 15, questionType: "categorization", questionText: "Kéo thả đáp án vào các cột dưới đây:", options: ["Phải tuân thủ những nguyên tắc cơ bản của chủ nghĩa Mác – Lênin", "Là quyền thiêng liêng, bất khả xâm phạm của tất cả các dân tộc", "Do Đảng Cộng sản lãnh đạo", "Sự thông cảm, tôn trọng lẫn nhau của những người cùng chung lý tưởng đấu tranh", "Độc lập dân tộc phải gắn liền với tự do, hạnh phúc của nhân dân", "Đi theo con đường cách mạng vô sản"], correctAnswer: { "1.Cách mạng giải phóng dân tộc": ["Do Đảng Cộng sản lãnh đạo", "Đi theo con đường cách mạng vô sản"], "2. Vấn đề độc lập dân tộc": ["Là quyền thiêng liêng, bất khả xâm phạm của tất cả các dân tộc", "Độc lập dân tộc phải gắn liền với tự do, hạnh phúc của nhân dân"] }},
-            { questionNumber: 16, questionType: "categorization", questionText: "Kéo thả các yếu tố liên quan đến tư tưởng Hồ Chí Minh về chủ nghĩa xã hội vào các cột tương ứng.", options: ["Nội lực và ngoại lực", "Do nhân dân lao động làm chủ", "Liên minh công – nông", "Vật chất và tinh thần", "Có nền kinh tế phát triển cao", "Phải tuân thủ những nguyên tắc cơ bản của chủ nghĩa Mác – Lênin"], correctAnswer: { "1. Động lực của chủ nghĩa xã hội": ["Nội lực và ngoại lực", "Vật chất và tinh thần"], "2. Đặc trưng của xã hội xã hội chủ nghĩa": ["Liên minh công - nông", "Phải tuân thủ những nguyên tắc cơ bản của chủ nghĩa Mác – Lênin"] }},
+            { questionNumber: 16, questionType: "categorization", questionText: "Kéo thả các yếu tố liên quan đến tư tưởng Hồ Chí Minh về chủ nghĩa xã hội vào các cột tương ứng.", options: ["Nội lực và ngoại lực", "Do nhân dân lao động làm chủ", "Liên minh công – nông", "Vật chất và tinh thần", "Có nền kinh tế phát triển cao", "Phải tuân thủ những nguyên tắc cơ bản của chủ nghĩa Mác – Lênin"], correctAnswer: { "1. Đặc trưng của xã hội xã hội chủ nghĩa": ["Liên minh công – nông", "Phải tuân thủ những nguyên tắc cơ bản của chủ nghĩa Mác – Lênin"], "2. Động lực của chủ nghĩa xã hội": ["Nội lực và ngoại lực", "Vật chất và tinh thần"] }},
             { questionNumber: 17, questionType: "categorization", questionText: "Kéo thả các yếu tố liên quan đến tư tưởng Hồ Chí Minh về chủ nghĩa xã hội vào các cột tương ứng.", options: ["Kinh tế tư nhân phát triển", "Chống chủ nghĩa cá nhân", "Nền kinh tế công hữu", "Con người chủ nghĩa xã hội", "Văn hóa đại chúng", "Dân chủ nhân dân"], correctAnswer: { "1. Yếu tố xây dựng chủ nghĩa xã hội": ["Chống chủ nghĩa cá nhân", "Con người chủ nghĩa xã hội"], "2. Đặc trưng của chủ nghĩa xã hội": ["Nền kinh tế công hữu", "Văn hóa đại chúng", "Dân chủ nhân dân"] }},
             { questionNumber: 18, questionType: "matching", questionText: "Ghép các khái niệm ở cột trái với các phát biểu tương ứng ở cột phải:", options: ["Là cơ sở, tiền đề để tiến lên chủ nghĩa xã hội", "Là vấn đề có ý nghĩa chiến lược, quyết định thành công cách mạng", "Là điều kiện để bảo đảm nền độc lập dân tộc vững chắc", "Góp phần chung cho nền hòa bình, độc lập, dân chủ và CNXH trên thế giới"], correctAnswer: { "1--Độc lập dân tộc": "Là cơ sở, tiền đề để tiến lên chủ nghĩa xã hội", "2--Chủ nghĩa xã hội": "Là điều kiện để bảo đảm nền độc lập dân tộc vững chắc", "3--Đại đoàn kết dân tộc": "Là vấn đề có ý nghĩa chiến lược, quyết định thành công cách mạng", "4--Đoàn kết cách mạng thế giới": "Góp phần chung cho nền hòa bình, độc lập, dân chủ và CNXH trên thế giới" }},
             { questionNumber: 20, questionType: "select-multiple", questionText: "Những cơ sở nào hình thành tư tưởng độc lập dân tộc của Hồ Chí Minh? (chọn 02 đáp án)", options: ["A. Chủ nghĩa yêu nước", "B. Chủ nghĩa tư bản", "C. Chủ nghĩa phong kiến", "D. Đấu tranh chống ngoại xâm"], correctAnswer: ["A", "D"] },
@@ -368,7 +368,10 @@
                     const catAnswers = {};
                     qElement.querySelectorAll('.drop-zone').forEach(zone => {
                         const title = zone.dataset.categoryTitle;
-                        catAnswers[title] = Array.from(zone.querySelectorAll('.draggable-item')).map(i => i.textContent);
+                        const items = Array.from(zone.querySelectorAll('.draggable-item')).map(i => i.textContent.trim());
+                        if (items.length > 0) {
+                            catAnswers[title] = items;
+                        }
                     });
                     userAnswers[currentQuestionIndex] = catAnswers;
                     break;
@@ -383,7 +386,7 @@
                         userAnswers[currentQuestionIndex] = dropped ? dropped.textContent : null;
                     }
                     break; }
-                case 'matching':
+                 case 'matching':
                     const matchAnswers = {};
                     qElement.querySelectorAll('.matching-premise').forEach(premise => {
                         const key = premise.querySelector('.matching-drop-zone').dataset.categoryTitle;
@@ -459,14 +462,40 @@
                 return answer === qData.correctAnswer;
             }
             if (qData.questionType === 'categorization') {
+                console.log('=== DEBUG CATEGORIZATION QUESTION 16 ===');
+                console.log('Question:', qData.questionNumber);
+                console.log('User Answer:', answer);
+                console.log('Correct Answer:', qData.correctAnswer);
+                
                 let correctCount = 0;
                 const correctKeys = Object.keys(qData.correctAnswer);
+                
+                // Kiểm tra xem có đủ số cột không
+                if (Object.keys(answer || {}).length !== correctKeys.length) {
+                    console.log('Số cột không khớp:', Object.keys(answer || {}).length, 'vs', correctKeys.length);
+                    return false;
+                }
+                
                 for (let cat of correctKeys) {
                     const correctItems = Array.isArray(qData.correctAnswer[cat]) ? qData.correctAnswer[cat] : [qData.correctAnswer[cat]];
                     const userItemsRaw = answer[cat] ?? [];
                     const userItems = Array.isArray(userItemsRaw) ? userItemsRaw : [userItemsRaw];
-                    if (JSON.stringify([...correctItems].sort()) === JSON.stringify([...userItems].sort())) correctCount++;
+                    
+                    // Loại bỏ khoảng trắng thừa và so sánh không phân biệt thứ tự
+                    const correctSorted = correctItems.map(item => item.trim()).sort();
+                    const userSorted = userItems.map(item => item.trim()).sort();
+                    
+                    console.log(`Cột "${cat}":`);
+                    console.log('  Correct:', correctSorted);
+                    console.log('  User:', userSorted);
+                    console.log('  Match:', JSON.stringify(correctSorted) === JSON.stringify(userSorted));
+                    
+                    if (JSON.stringify(correctSorted) === JSON.stringify(userSorted)) {
+                        correctCount++;
+                    }
                 }
+                console.log('Total correct columns:', correctCount, '/', correctKeys.length);
+                console.log('=== END DEBUG ===');
                 return correctCount === correctKeys.length;
             }
             if (qData.questionType === 'matching') {
@@ -758,25 +787,25 @@
                 enableTouchMode(qElement, draggables, dropZones, sourceContainers);
             } else {
                 // Regular drag & drop for desktop
-                draggables.forEach(draggable => {
-                    draggable.addEventListener('dragstart', () => draggable.classList.add('dragging'));
-                    draggable.addEventListener('dragend', () => draggable.classList.remove('dragging'));
-                });
+            draggables.forEach(draggable => {
+                draggable.addEventListener('dragstart', () => draggable.classList.add('dragging'));
+                draggable.addEventListener('dragend', () => draggable.classList.remove('dragging'));
+            });
             }
             // Only add drag & drop listeners if not in touch mode
             if (!touchMode) {
-                dropZones.forEach(zone => {
-                    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-                    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-                    zone.addEventListener('drop', e => {
-                        e.preventDefault();
-                        zone.classList.remove('drag-over');
-                        const dragging = document.querySelector('.dragging');
-                        // Allow only one item in matching drop zones
-                        if (zone.classList.contains('matching-drop-zone') && zone.children.length > 0) {
-                            const sourceContainer = qElement.querySelector('.draggable-items-source');
-                            sourceContainer.appendChild(zone.firstElementChild);
-                        }
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+                zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+                zone.addEventListener('drop', e => {
+                    e.preventDefault();
+                    zone.classList.remove('drag-over');
+                    const dragging = document.querySelector('.dragging');
+                    // Allow only one item in matching drop zones
+                    if (zone.classList.contains('matching-drop-zone') && zone.children.length > 0) {
+                        const sourceContainer = qElement.querySelector('.draggable-items-source');
+                        sourceContainer.appendChild(zone.firstElementChild);
+                    }
                         // Special handling for drag-blank with multiple blanks
                         if (qElement.classList.contains('drag-blank') && zone.classList.contains('blank-drop-zone')) {
                             const blanks = qElement.querySelectorAll('.blank-drop-zone');
@@ -799,11 +828,11 @@
                                 return;
                             }
                         }
-                        if (dragging) zone.appendChild(dragging);
-                        saveAnswer();
-                        updateOverview();
-                    });
+                    if (dragging) zone.appendChild(dragging);
+                    saveAnswer();
+                    updateOverview();
                 });
+            });
             }
 
             // Allow dragging answers back to the source container (only if not in touch mode)
