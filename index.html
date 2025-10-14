@@ -89,6 +89,39 @@
         .drop-zone.touch-mode:hover { border-color: #667eea; background: #f0f2ff; }
         .drop-zone.touch-mode.selected { border-color: #667eea; background: #e8f0ff; }
         
+        /* Remove button for mobile */
+        .draggable-item.remove-btn {
+            position: relative;
+        }
+        .draggable-item.remove-btn::after {
+            content: '✕';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 20;
+        }
+        
+        /* Mobile hint styling */
+        .mobile-hint {
+            background: #e8f4fd;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            color: #0066cc;
+        }
+        
         /* Mobile responsive */
         @media (max-width: 768px) {
             .draggable-item { padding: 12px 16px; font-size: 0.95em; }
@@ -462,17 +495,11 @@
                 return answer === qData.correctAnswer;
             }
             if (qData.questionType === 'categorization') {
-                console.log('=== DEBUG CATEGORIZATION QUESTION 16 ===');
-                console.log('Question:', qData.questionNumber);
-                console.log('User Answer:', answer);
-                console.log('Correct Answer:', qData.correctAnswer);
-                
                 let correctCount = 0;
                 const correctKeys = Object.keys(qData.correctAnswer);
                 
                 // Kiểm tra xem có đủ số cột không
                 if (Object.keys(answer || {}).length !== correctKeys.length) {
-                    console.log('Số cột không khớp:', Object.keys(answer || {}).length, 'vs', correctKeys.length);
                     return false;
                 }
                 
@@ -485,17 +512,10 @@
                     const correctSorted = correctItems.map(item => item.trim()).sort();
                     const userSorted = userItems.map(item => item.trim()).sort();
                     
-                    console.log(`Cột "${cat}":`);
-                    console.log('  Correct:', correctSorted);
-                    console.log('  User:', userSorted);
-                    console.log('  Match:', JSON.stringify(correctSorted) === JSON.stringify(userSorted));
-                    
                     if (JSON.stringify(correctSorted) === JSON.stringify(userSorted)) {
                         correctCount++;
                     }
                 }
-                console.log('Total correct columns:', correctCount, '/', correctKeys.length);
-                console.log('=== END DEBUG ===');
                 return correctCount === correctKeys.length;
             }
             if (qData.questionType === 'matching') {
@@ -646,7 +666,11 @@
                         const visibleCat = formatVisibleText(cat);
                         contentHTML += `<div class="category"><div class="category-title">${visibleCat}</div><div class="drop-zone" data-category-title="${cat}"></div></div>`;
                     });
-                    contentHTML += '</div><p><strong>Các lựa chọn:</strong></p><div class="draggable-items-source">';
+                    contentHTML += '</div><p><strong>Các lựa chọn:</strong></p>';
+                    if (isTouchDevice) {
+                        contentHTML += '<p class="mobile-hint"><small>💡 <strong>Hướng dẫn:</strong> Chạm để chọn, chạm vào cột để đặt. Chạm vào góc trên bên phải (✕) để gỡ đáp án.</small></p>';
+                    }
+                    contentHTML += '<div class="draggable-items-source">';
                     (q._optionsShuffled || q.options).forEach(opt => contentHTML += `<div class="draggable-item" draggable="true">${opt}</div>`);
                     contentHTML += '</div>';
                     break;
@@ -707,7 +731,13 @@
             
             // Handle drop zone clicks
             dropZones.forEach(zone => {
-                zone.addEventListener('click', () => {
+                zone.addEventListener('click', (e) => {
+                    // If clicking on an item inside the zone, handle double-tap logic
+                    if (e.target.classList.contains('draggable-item') && e.target.parentElement === zone) {
+                        return; // Let the double-tap handler deal with this
+                    }
+                    
+                    // If clicking on empty zone and have selected item
                     if (!selectedItem) return;
                     
                     // Special handling for matching (only one item per zone)
@@ -743,6 +773,34 @@
                         zone.appendChild(selectedItem);
                     }
                     
+                    // Add remove button for mobile
+                    if (isTouchDevice) {
+                        const itemToAdd = selectedItem;
+                        itemToAdd.classList.add('remove-btn');
+                        itemToAdd.addEventListener('click', (e) => {
+                            // Check if clicking on the remove button (✕)
+                            const rect = e.target.getBoundingClientRect();
+                            const clickX = e.clientX - rect.left;
+                            const clickY = e.clientY - rect.top;
+                            
+                            // If click is near the top-right corner (where ✕ is)
+                            if (clickX > rect.width - 25 && clickY < 25) {
+                                e.stopPropagation();
+                                const sourceContainer = qElement.querySelector('.draggable-items-source');
+                                if (sourceContainer) {
+                                    itemToAdd.classList.remove('remove-btn');
+                                    sourceContainer.appendChild(itemToAdd);
+                                    if (selectedItem === itemToAdd) {
+                                        selectedItem.classList.remove('selected');
+                                        selectedItem = null;
+                                    }
+                                    saveAnswer();
+                                    updateOverview();
+                                }
+                            }
+                        });
+                    }
+                    
                     selectedItem.classList.remove('selected');
                     selectedItem = null;
                     saveAnswer();
@@ -757,6 +815,58 @@
                         if (selectedItem) selectedItem.classList.remove('selected');
                         selectedItem = e.target;
                         selectedItem.classList.add('selected');
+                    }
+                });
+            });
+            
+            // Add long press to remove items from drop zones
+            let pressTimer = null;
+            
+            dropZones.forEach(zone => {
+                zone.addEventListener('click', (e) => {
+                    // If clicking on an item inside the zone (not the zone itself)
+                    if (e.target.classList.contains('draggable-item') && e.target.parentElement === zone) {
+                        // Single tap - select the item
+                        if (selectedItem) selectedItem.classList.remove('selected');
+                        selectedItem = e.target;
+                        selectedItem.classList.add('selected');
+                    }
+                });
+                
+                // Long press to remove items
+                zone.addEventListener('touchstart', (e) => {
+                    if (e.target.classList.contains('draggable-item') && e.target.parentElement === zone) {
+                        pressTimer = setTimeout(() => {
+                            // Long press detected - remove the item
+                            const sourceContainer = qElement.querySelector('.draggable-items-source');
+                            if (sourceContainer) {
+                                sourceContainer.appendChild(e.target);
+                                if (selectedItem === e.target) {
+                                    selectedItem.classList.remove('selected');
+                                    selectedItem = null;
+                                }
+                                saveAnswer();
+                                updateOverview();
+                                
+                                // Show visual feedback
+                                e.target.style.transform = 'scale(1.1)';
+                                setTimeout(() => e.target.style.transform = '', 200);
+                            }
+                        }, 800); // 800ms long press
+                    }
+                });
+                
+                zone.addEventListener('touchend', () => {
+                    if (pressTimer) {
+                        clearTimeout(pressTimer);
+                        pressTimer = null;
+                    }
+                });
+                
+                zone.addEventListener('touchmove', () => {
+                    if (pressTimer) {
+                        clearTimeout(pressTimer);
+                        pressTimer = null;
                     }
                 });
             });
